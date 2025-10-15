@@ -1,7 +1,634 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medication Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 30px;
+        }
+
+        h1 {
+            color: #667eea;
+            margin-bottom: 30px;
+            text-align: center;
+            font-size: 2.5em;
+        }
+
+        .form-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            width: 100%;
+            font-weight: 600;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        .med-list {
+            margin-top: 30px;
+        }
+
+        .med-item {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: all 0.3s;
+        }
+
+        .med-item:hover {
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border-color: #667eea;
+        }
+
+        .med-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .med-name {
+            font-size: 1.3em;
+            color: #333;
+            font-weight: 700;
+        }
+
+        .med-info {
+            color: #666;
+            margin: 5px 0;
+        }
+
+        .next-dose {
+            background: #e8f5e9;
+            color: #2e7d32;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-weight: 600;
+        }
+
+        .next-dose.overdue {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .delete-btn {
+            background: #ff4444;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .delete-btn:hover {
+            background: #cc0000;
+        }
+
+        .taken-btn {
+            background: #4CAF50;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 10px;
+        }
+
+        .taken-btn:hover {
+            background: #45a049;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            border-left: 5px solid #667eea;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            max-width: 350px;
+            z-index: 1000;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .notification h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .notification-buttons {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .notification-buttons button {
+            flex: 1;
+            padding: 8px;
+            font-size: 14px;
+        }
+
+        .dismiss-btn {
+            background: #999;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .modal-content h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .modal-content p {
+            color: #666;
+            margin-bottom: 25px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .modal-buttons button {
+            flex: 1;
+        }
+
+        .cancel-btn {
+            background: #999;
+        }
+
+        .taken-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .request-permission {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .request-permission button {
+            margin-top: 10px;
+            width: auto;
+            padding: 10px 20px;
+        }
+
+        .add-med-toggle {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            width: 100%;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .add-med-toggle:hover {
+            transform: translateY(-2px);
+        }
+
+        .form-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            max-height: 0;
+            overflow: hidden;
+            opacity: 0;
+            transition: all 0.3s ease-in-out;
+        }
+
+        .form-section.active {
+            max-height: 600px;
+            opacity: 1;
+            margin-bottom: 30px;
+        }
+
+        .arrow {
+            transition: transform 0.3s;
+            font-size: 20px;
+        }
+
+        .arrow.rotated {
+            transform: rotate(180deg);
+        }
+    </style>
+</head>
 <body>
-<h1>Hello World</h1>
-<p>I'm hosted with GitHub Pages.</p>
+    <div class="container">
+        <h1>💊 Medication Tracker</h1>
+
+        <div id="permissionRequest" class="request-permission" style="display: none;">
+            <p><strong>Enable notifications to get reminded when your medication is due!</strong></p>
+            <button onclick="requestNotificationPermission()">Enable Notifications</button>
+        </div>
+
+        <div id="confirmModal" class="modal">
+            <div class="modal-content">
+                <h3 id="modalTitle">Confirm Action</h3>
+                <p id="modalMessage"></p>
+                <div class="modal-buttons">
+                    <button class="cancel-btn" onclick="closeModal()">Cancel</button>
+                    <button id="confirmBtn" onclick="confirmAction()">Confirm</button>
+                </div>
+            </div>
+        </div>
+
+        <button class="add-med-toggle" onclick="toggleForm()">
+            <span>➕ Add New Medication</span>
+            <span class="arrow" id="formArrow">▼</span>
+        </button>
+
+        <div class="form-section" id="formSection">
+            <h2 style="margin-bottom: 20px; color: #333;">Add Medication</h2>
+            <form id="medForm">
+                <div class="form-group">
+                    <label for="medName">Medication Name</label>
+                    <input type="text" id="medName" required>
+                </div>
+                <div class="form-group">
+                    <label for="dosage">Dosage</label>
+                    <input type="text" id="dosage" placeholder="e.g., 500mg" required>
+                </div>
+                <div class="form-group">
+                    <label for="frequency">Frequency (hours)</label>
+                    <select id="frequency" required>
+                        <option value="4">Every 4 hours</option>
+                        <option value="6">Every 6 hours</option>
+                        <option value="8">Every 8 hours</option>
+                        <option value="12">Every 12 hours</option>
+                        <option value="24">Every 24 hours</option>
+                    </select>
+                </div>
+                <button type="submit">Add Medication</button>
+            </form>
+        </div>
+
+        <div class="med-list">
+            <h2 style="margin-bottom: 20px; color: #333;">Your Medications</h2>
+            <div id="medsList"></div>
+        </div>
+    </div>
+
+    <script>
+        let medications = [];
+        let notificationCheckInterval;
+        let countdownInterval;
+        let pendingAction = null;
+
+        // Toggle form visibility
+        function toggleForm() {
+            const formSection = document.getElementById('formSection');
+            const arrow = document.getElementById('formArrow');
+            formSection.classList.toggle('active');
+            arrow.classList.toggle('rotated');
+        }
+
+        // Modal functions
+        function showModal(title, message, action) {
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalMessage').textContent = message;
+            document.getElementById('confirmModal').classList.add('active');
+            pendingAction = action;
+        }
+
+        function closeModal() {
+            document.getElementById('confirmModal').classList.remove('active');
+            pendingAction = null;
+        }
+
+        function confirmAction() {
+            if (pendingAction) {
+                pendingAction();
+            }
+            closeModal();
+        }
+
+        // Load medications from localStorage
+        function loadMedications() {
+            const stored = localStorage.getItem('medications');
+            if (stored) {
+                medications = JSON.parse(stored);
+            }
+            renderMedications();
+        }
+
+        // Save medications to localStorage
+        function saveMedications() {
+            localStorage.setItem('medications', JSON.stringify(medications));
+        }
+
+        // Add new medication
+        function addMedication(e) {
+            e.preventDefault();
+            
+            const med = {
+                id: Date.now(),
+                name: document.getElementById('medName').value,
+                dosage: document.getElementById('dosage').value,
+                frequency: parseInt(document.getElementById('frequency').value),
+                lastTaken: Date.now(),
+                nextDue: Date.now() + (parseInt(document.getElementById('frequency').value) * 60 * 60 * 1000)
+            };
+
+            medications.push(med);
+            saveMedications();
+            renderMedications();
+            
+            // Reset form and close it
+            document.getElementById('medForm').reset();
+            toggleForm();
+            return false;
+        }
+        
+        document.getElementById('medForm').addEventListener('submit', addMedication);
+
+        // Mark medication as taken
+        function markAsTaken(id) {
+            const med = medications.find(m => m.id === id);
+            if (med) {
+                showModal(
+                    'Mark as Taken',
+                    `Confirm you've taken ${med.name} (${med.dosage})?`,
+                    () => {
+                        med.lastTaken = Date.now();
+                        med.nextDue = Date.now() + (med.frequency * 60 * 60 * 1000);
+                        saveMedications();
+                        renderMedications();
+                    }
+                );
+            }
+        }
+
+        // Delete medication
+        function deleteMed(id) {
+            const med = medications.find(m => m.id === id);
+            if (med) {
+                showModal(
+                    'Delete Medication',
+                    `Are you sure you want to delete ${med.name}? This action cannot be undone.`,
+                    () => {
+                        medications = medications.filter(m => m.id !== id);
+                        saveMedications();
+                        renderMedications();
+                    }
+                );
+            }
+        }
+
+        // Format time
+        function formatTime(timestamp) {
+            const date = new Date(timestamp);
+            return date.toLocaleString('en-US', { 
+                month: 'short', 
+                day: 'numeric', 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+        }
+
+        // Get time remaining
+        function getTimeRemaining(nextDue) {
+            const now = Date.now();
+            const diff = nextDue - now;
+            
+            if (diff < 0) {
+                return 'OVERDUE';
+            }
+            
+            const hours = Math.floor(diff / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            
+            if (hours > 0) {
+                return `in ${hours}h ${minutes}m`;
+            } else {
+                return `in ${minutes}m`;
+            }
+        }
+
+        // Render medications list
+        function renderMedications() {
+            const container = document.getElementById('medsList');
+            
+            if (medications.length === 0) {
+                container.innerHTML = '<div class="empty-state">No medications added yet. Add your first medication above!</div>';
+                return;
+            }
+
+            container.innerHTML = medications.map(med => {
+                const isOverdue = med.nextDue < Date.now();
+                const isDue = med.nextDue <= Date.now();
+                return `
+                    <div class="med-item">
+                        <div class="med-header">
+                            <div class="med-name">${med.name}</div>
+                            <div>
+                                <button class="taken-btn" onclick="markAsTaken(${med.id})" ${!isDue ? 'disabled' : ''}>
+                                    ${isDue ? 'Mark as Taken' : 'Not Due Yet'}
+                                </button>
+                                <button class="delete-btn" onclick="deleteMed(${med.id})">Delete</button>
+                            </div>
+                        </div>
+                        <div class="med-info">Dosage: ${med.dosage}</div>
+                        <div class="med-info">Frequency: Every ${med.frequency} hours</div>
+                        <div class="med-info">Last taken: ${formatTime(med.lastTaken)}</div>
+                        <div class="next-dose ${isOverdue ? 'overdue' : ''}">
+                            Next dose: ${formatTime(med.nextDue)} (${getTimeRemaining(med.nextDue)})
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Show notification
+        function showNotification(med) {
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.innerHTML = `
+                <h3>💊 Medication Reminder</h3>
+                <p><strong>${med.name}</strong> (${med.dosage}) is due now!</p>
+                <div class="notification-buttons">
+                    <button onclick="markAsTaken(${med.id}); this.closest('.notification').remove();">Mark as Taken</button>
+                    <button class="dismiss-btn" onclick="this.closest('.notification').remove();">Dismiss</button>
+                </div>
+            `;
+            document.body.appendChild(notification);
+
+            // Also try browser notification if permitted
+            if (Notification.permission === 'granted') {
+                new Notification('Medication Reminder', {
+                    body: `${med.name} (${med.dosage}) is due now!`,
+                    icon: '💊'
+                });
+            }
+        }
+
+        // Check for due medications
+        function checkDueMedications() {
+            const now = Date.now();
+            medications.forEach(med => {
+                if (med.nextDue <= now && !med.notified) {
+                    showNotification(med);
+                    med.notified = true;
+                }
+                if (med.nextDue > now) {
+                    med.notified = false;
+                }
+            });
+        }
+
+        // Request notification permission
+        function requestNotificationPermission() {
+            if ('Notification' in window) {
+                Notification.requestPermission().then(permission => {
+                    if (permission === 'granted') {
+                        document.getElementById('permissionRequest').style.display = 'none';
+                    }
+                });
+            }
+        }
+
+        // Check if we should show permission request
+        function checkNotificationPermission() {
+            if ('Notification' in window && Notification.permission === 'default') {
+                document.getElementById('permissionRequest').style.display = 'block';
+            }
+        }
+
+        // Initialize
+        loadMedications();
+        checkNotificationPermission();
+        
+        // Check for due medications every minute
+        notificationCheckInterval = setInterval(() => {
+            checkDueMedications();
+            renderMedications();
+        }, 60000);
+
+        // Also check immediately
+        checkDueMedications();
+
+        // Update display every second for live countdown
+        countdownInterval = setInterval(renderMedications, 1000);
+    </script>
 </body>
 </html>
